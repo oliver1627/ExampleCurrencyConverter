@@ -1,0 +1,99 @@
+package TemPack;
+
+public interface HttpHandler {
+
+}
+
+import java.net.InetSocketAddress;
+
+import TemPack.TemperatureServiceProvider.MyHandler;
+
+public class HttpServer {
+
+	public static HttpServer create(InetSocketAddress inetSocketAddress, int i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void createContext(String string, MyHandler myHandler) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setExecutor(Object object) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void start() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class TemperatureConsumer {
+
+    public static void main(String[] args) throws Exception {
+        double celsius = 25.0;
+        String url = "http://localhost:8080/celsiusToFahrenheit?temp=" + celsius;
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // optional default is GET
+        con.setRequestMethod("GET");
+
+        int responseCode = con.getResponseCode();
+        System.out.println("Sending 'GET' request to URL : " + url);
+        System.out.println("Response Code : " + responseCode);
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        // Print the result
+        System.out.println(response.toString());
+    }
+}
+
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+
+public class TemperatureServiceProvider {
+
+    public static void main(String[] args) throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        server.createContext("/celsiusToFahrenheit", new MyHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
+    }
+
+    public static class MyHandler implements HttpHandler {
+        @Override
+        public void handle(com.sun.net.httpserver.HttpExchange t) throws IOException {
+            String query = t.getRequestURI().getQuery();
+            String[] params = query.split("=");
+            double celsius = Double.parseDouble(params[1]);
+
+            double fahrenheit = (celsius * 9/5) + 32;
+            String response = celsius + "°C is equal to " + fahrenheit + "°F";
+            t.sendResponseHeaders(200, response.length());
+            OutputStream os = t.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        }
+    }
+}
